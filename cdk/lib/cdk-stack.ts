@@ -2,6 +2,7 @@ import * as core from '@aws-cdk/core';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
+import * as codebuild from '@aws-cdk/aws-codebuild';
 
 export class CdkStack extends core.Stack {
   constructor(scope: core.Construct, id: string, props?: core.StackProps) {
@@ -13,8 +14,14 @@ export class CdkStack extends core.Stack {
     });
 
     const sourceOutput = new codepipeline.Artifact();
+    const buildOutput = new codepipeline.Artifact();
     const token = process.env.GITHUB_TOKEN || "";
 
+    const codeBuildProject = new codebuild.PipelineProject(this, 'Project', {
+      // properties as above...
+      projectName: 'MyBuild'
+    });
+    
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
         {
@@ -32,7 +39,20 @@ export class CdkStack extends core.Stack {
               }
             ),
           ],
-        },        
+        },
+        {
+          stageName: 'Build',
+          actions: [
+            new codepipeline_actions.CodeBuildAction(
+              {
+                actionName: 'CodeBuild',
+                project: codeBuildProject,
+                input: sourceOutput,
+                outputs: [buildOutput]
+              }
+            )  
+          ]
+        },
         {
           stageName: 'Deploy',
           actions: [
