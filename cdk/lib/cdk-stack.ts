@@ -21,6 +21,16 @@ export class CdkStack extends core.Stack {
       vpc: vpc
     });
 
+    // Create a load-balanced Fargate service and make it public
+    new ecs_patterns.ApplicationLoadBalancedFargateService(this, "MyFargateService", {
+      cluster: cluster, // Required
+      //cpu: 512, // Default is 256
+      //desiredCount: 6, // Default is 1
+      taskImageOptions: { image: ecs.ContainerImage.fromRegistry("amazon/amazon-ecs-sample") },
+      //memoryLimitMiB: 2048, // Default is 512
+      publicLoadBalancer: true // Default is false
+    });
+
     // The code that defines your stack goes here
     const targetBucket = new s3.Bucket(this, 'MyFirstBucket', {
       versioned: true
